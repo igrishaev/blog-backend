@@ -4,6 +4,10 @@
    [blog-backend.http :as http]))
 
 
+(defn handle-new-comment [request]
+  )
+
+
 (defn router [{:as request
                :keys [httpMethod path]}]
 

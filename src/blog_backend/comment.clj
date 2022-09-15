@@ -1,9 +1,12 @@
 (ns blog-backend.comment
   (:require
+   blog-backend.ex
    [blog-backend.github :as gh]
    [blog-backend.date :as date]
    [blog-backend.util :as util]
-   [clojure.string :as str]))
+   [clojure.string :as str])
+  (:import
+   ex.ValidationError))
 
 
 (def ne-string?
@@ -24,11 +27,10 @@
     (println comment)))
 
 
-
 (defn validate!
   [{:keys [author comment path]}]
   (when-not (ne-string? author)
-    1))
+    (throw (new ValidationError "Wrong author" {:author author}))))
 
 
 (defn handle-new-comment

@@ -1,11 +1,14 @@
 (ns blog-backend.http
   (:require
+   blog-backend.ex
    [blog-backend.util :as util]
    [ring.util.codec :as codec]
    [clojure.walk :as walk]
    [clojure.string :as str]
    [clojure.java.io :as io]
-   [cheshire.core :as json]))
+   [cheshire.core :as json])
+  (:import
+   ex.ValidationError))
 
 
 (defn content-type-matches? [request content-type]
@@ -47,7 +50,11 @@
                    e)
         {:status 500
          :headers {:content-type "text/plain"}
-         :body "Internal Server Error"}))))
+         :body "Internal Server Error"})
+      (catch ValidationError e
+        {:status 404
+         :headers {:content-type "text/plain"}
+         :body "Incorrect Input"}))))
 
 
 (defn in->request []

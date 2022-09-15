@@ -13,18 +13,20 @@
   :dependencies
   [[org.clojure/clojure "1.11.1"]
    [ring/ring-codec "1.2.0"]
+   [commons-codec/commons-codec "1.15"]
    [http-kit "2.6.0"]
    [cheshire "5.10.0"]]
 
-  :main
-  ^:skip-aot blog-backend.core
+  :main blog-backend.core
+  ;; ^:skip-aot blog-backend.core
 
   :target-path
   "target/%s"
 
   :profiles
   {:dev
-   {:global-vars
+   {;; :aot [blog-backend.ex]
+    :global-vars
     {*warn-on-reflection* true
      *assert* true}}
 
