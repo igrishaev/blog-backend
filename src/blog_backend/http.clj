@@ -7,13 +7,24 @@
 
 
 (defn wrap-base64 [handler]
-  (fn [request]
-    123))
+  (fn [{:as request :keys [isBase64Encoded]}]
+    (if isBase64Encoded
+      (handler (update request :body
+                       (fn [body]
+                         (-> body
+                             ^bytes (codec/base64-decode)
+                             (String. "UTF-8")))))
+      (handler request))))
 
 
 (defn wrap-form-params [handler]
-  (fn [request]
-    123))
+  (fn [{:as request :keys [body headers]}]
+    (if ...
+      (handler (assoc request :formParams
+                      (-> body
+                          (codec/form-decode)
+                          (keywordize))))
+      (handler request))))
 
 
 (defn in->request []
