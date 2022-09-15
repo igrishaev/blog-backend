@@ -11,8 +11,10 @@
    :user (util/get-env! "GITHUB_USER")})
 
 
-(defn handle-new-comment [{:keys [body
-                                  isBase64Encoded]}]
+(defn handle-new-comment
+  [{:keys [formParams]}]
+
+
   )
 
 
