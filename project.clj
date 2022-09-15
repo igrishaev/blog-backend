@@ -12,8 +12,8 @@
 
   :dependencies
   [[org.clojure/clojure "1.11.1"]
+   [ring/ring-codec "1.2.0"]
    [http-kit "2.6.0"]
-   [cprop "0.1.19"]
    [cheshire "5.10.0"]]
 
   :main

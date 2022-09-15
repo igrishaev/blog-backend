@@ -3,15 +3,11 @@
   Github Graphql API.
   "
   (:require
+   [blog-backend.util :as util]
    [cheshire.core :as json]
    [clojure.java.io :as io]
    [clojure.string :as str]
-   [org.httpkit.client :as http])
-  (:import
-   java.io.InputStream
-   java.io.File
-   java.util.Base64
-   org.apache.commons.codec.binary.Base64InputStream))
+   [org.httpkit.client :as http]))
 
 
 (defn make-request [config operation query variables]
@@ -148,19 +144,6 @@ mutation Mutation($input: CreateCommitOnBranchInput!) {
 ")
 
 
-
-(defn base64-encode-stream [in]
-  (new Base64InputStream in true 0 (byte-array 0)))
-
-
-(defn file? [x]
-  (instance? File x))
-
-
-(defn stream? [x]
-  (instance? InputStream x))
-
-
 (defn process-addition
   [{:as addition :keys [contents]}]
 
@@ -168,24 +151,27 @@ mutation Mutation($input: CreateCommitOnBranchInput!) {
 
     (string? contents)
     (update addition :contents
-            #(-> ^String %
-                 .getBytes
-                 io/input-stream
-                 base64-encode-stream
-                 slurp))
+            (fn [^String string]
+              (-> string
+                  .getBytes
+                  io/input-stream
+                  util/base64-encode-stream
+                  slurp)))
 
-    (stream? contents)
+    (util/in-stream? contents)
     (update addition :contents
-            #(-> %
-                 base64-encode-stream
-                 slurp))
+            (fn [in-stream]
+              (-> in-stream
+                  util/base64-encode-stream
+                  slurp)))
 
-    (file? contents)
+    (util/file? contents)
     (update addition :contents
-            #(-> %
-                 io/input-stream
-                 base64-encode-stream
-                 slurp))
+            (fn [file]
+              (-> file
+                  io/input-stream
+                  util/base64-encode-stream
+                  slurp)))
 
     :else
     (throw (ex-info "Wrong contents type"
@@ -281,9 +267,9 @@ mutation Mutation ($input: CreatePullRequestInput!) {
 #_
 (comment
 
-  (def -repo-id "MDEwOlJlcG9zaXRvcnk0ODk1MDMzNw==")
+  (def -c {:token "..."})
 
-  (def -c {:token ""})
+  (def -repo-id "MDEwOlJlcG9zaXRvcnk0ODk1MDMzNw==")
 
   ;;--
 
