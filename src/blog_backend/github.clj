@@ -222,6 +222,62 @@ mutation Mutation($input: CreateCommitOnBranchInput!) {
                     (assoc :deletions deletions))}}))
 
 
+(def QUERY_CREATE_PR "
+mutation Mutation ($input: CreatePullRequestInput!) {
+  createPullRequest(input: $input) {
+    clientMutationId
+    pullRequest {
+      id
+    }
+  }
+}
+")
+
+
+;; (defn foo [a b & {:keys [c d e] :or {c false}}]
+;;   [a b c d e])
+;; (defn foo [a b (c false) (d nil) (e true)]
+;;   [a b c d e])
+;; (require '[clojure.spec.alpha :as s])
+;; (s/def ::args
+;;   (s/cat :req (s/* symbol?)
+;;          :opt (s/* (s/tuple symbol? any?))))
+;; (s/conform ::args '[a b c])
+
+
+(defn create-pull-request [config
+                           repo-id
+                           branch-base
+                           branch-head
+                           title
+                           & {:keys [body
+                                     mutation-id
+                                     draft?
+                                     maintainer-can-modify?]
+                              :or {draft? false
+                                   maintainer-can-modify? true}}]
+  (make-request config
+                :Mutation
+                QUERY_CREATE_PR
+                {:input
+                 (cond-> {:baseRefName (branch->ref branch-base)
+                          :headRefName (branch->ref branch-head)
+                          :repositoryId repo-id
+                          :title title}
+
+                   body
+                   (assoc :body body)
+
+                   mutation-id
+                   (assoc :clientMutationId mutation-id)
+
+                   (boolean? draft?)
+                   (assoc :draft draft?)
+
+                   (boolean? maintainer-can-modify?)
+                   (assoc :maintainerCanModify maintainer-can-modify?))}))
+
+
 #_
 (comment
 
@@ -243,7 +299,7 @@ mutation Mutation($input: CreateCommitOnBranchInput!) {
 
   ;;--
 
-  (create-branch -c "foobar2" -repo-id "e47f3dfc26c3dd1b2f83c5ec5f9f3137474af48c")
+  (create-branch -c "foobar3" -repo-id "e47f3dfc26c3dd1b2f83c5ec5f9f3137474af48c")
 
   {:data
    {:createRef
@@ -253,7 +309,7 @@ mutation Mutation($input: CreateCommitOnBranchInput!) {
   ;;--
 
   (create-commit -c
-                 "MDM6UmVmNDg5NTAzMzc6cmVmcy9oZWFkcy9mb29iYXIy"
+                 "MDM6UmVmNDg5NTAzMzc6cmVmcy9oZWFkcy9mb29iYXIz"
                  "hello"
                  "e47f3dfc26c3dd1b2f83c5ec5f9f3137474af48c"
                  {:additions [{:path "foo/tttt.txt"
@@ -266,5 +322,19 @@ mutation Mutation($input: CreateCommitOnBranchInput!) {
      :commit
      {:id
       "C_kwDOAursQdoAKDE3NjI2NDhkNmFiN2U4Yjc1MGVlMjRlNjM3MDhiOTJlODRjMTRiNDg"}}}}
+
+  ;; --
+
+  (create-pull-request -c
+                       "MDEwOlJlcG9zaXRvcnk0ODk1MDMzNw=="
+                       "master"
+                       "foobar3"
+                       "test")
+
+  {:data
+   {:createPullRequest
+    {:clientMutationId nil,
+     :pullRequest {:id "PR_kwDOAursQc4_A4y4"}}}}
+
 
   )
