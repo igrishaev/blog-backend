@@ -1,12 +1,33 @@
 (ns blog-backend.comment
   (:require
    [blog-backend.github :as gh]
-   [blog-backend.util :as util]))
+   [blog-backend.date :as date]
+   [blog-backend.util :as util]
+   [clojure.string :as str]))
+
+
+(def ne-string?
+  (every-pred string? (complement str/blank?)))
+
+
+(defn render-comment [id path date author comment]
+  (with-out-str
+    (println "---")
+    (println "id:" id)
+    (println "is_spam:" false)
+    (println "is_deleted:" false)
+    (println "post:" path)
+    (println "date:" date)
+    (println "author_fullname:" (format "'%s'" author))
+    (println "---")
+    (println)
+    (println comment)))
+
 
 
 (defn validate!
-  [{:keys [author comment]}]
-  (when-not (string? author)
+  [{:keys [author comment path]}]
+  (when-not (ne-string? author)
     1))
 
 
@@ -14,8 +35,13 @@
   [{:keys [formParams]}]
 
   (let [{:keys [author
-                comment]}
+                comment
+                path]}
         formParams
+
+        ;; TODO
+        _
+        (validate! formParams)
 
         gh
         {:token (util/get-env! "GITHUB_TOKEN")}
@@ -29,8 +55,11 @@
         commit
         (-> resp-get-repo :data :repository :ref :target)
 
+        ms
+        (date/ms-now)
+
         branch-name
-        (format "comment-%s" (System/currentTimeMillis))
+        (format "comment-%s" ms)
 
         resp-create-branch
         (gh/create-branch gh branch-name repo-id commit)
@@ -38,11 +67,20 @@
         branch-id
         (-> resp-create-branch :data :createRef :ref :id)
 
+        inst-now
+        (date/inst-now)
+
         comment-path
-        "_comments/foobar.md" ;; todo
+        (format "_comments/%s.md" (date/inst->dash inst-now))
+
+        comment-id
+        ms
+
+        date
+        (date/inst->iso inst-now)
 
         comment-content
-        "aaaaa" ;; todo
+        (render-comment comment-id path date author comment)
 
         additions
         [{:path comment-path
@@ -55,20 +93,13 @@
                           commit
                           {:additions additions})
 
-        _
+        resp-create-pr
         (gh/create-pull-request gh
                                 repo-id
                                 "master"
                                 branch-name
-                                "New comment")
+                                "New comment")]
 
-
-
-        ]
-
-
-    )
-
-
-
-  )
+    {:status 200
+     :headers {:content-type "text/plain"}
+     :body "OK"}))
