@@ -17,8 +17,8 @@
 
 
 
-(defn app [{:as request
-            :keys [httpMethod path]}]
+(defn router [{:as request
+               :keys [httpMethod path]}]
 
   (case [httpMethod path]
 
@@ -29,6 +29,13 @@
     {:status 404
      :headers {:content-type "text/plain"}
      :body "Not found"}))
+
+
+(def app
+  (-> router
+      http/wrap-base64
+      http/wrap-form-params
+      http/wrap-exception))
 
 
 (defn -main

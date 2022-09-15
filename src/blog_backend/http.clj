@@ -2,8 +2,17 @@
   (:require
    [blog-backend.util :as util]
    [ring.util.codec :as codec]
+   [clojure.walk :as walk]
+   [clojure.string :as str]
    [clojure.java.io :as io]
    [cheshire.core :as json]))
+
+
+(defn content-type-matches? [request content-type]
+  (some-> request
+          :headers
+          :Content-Type
+          (str/includes? content-type)))
 
 
 (defn wrap-base64 [handler]
@@ -18,13 +27,27 @@
 
 
 (defn wrap-form-params [handler]
-  (fn [{:as request :keys [body headers]}]
-    (if ...
+  (fn [{:as request :keys [body]}]
+    (if (content-type-matches? request "x-www-form-urlencoded")
       (handler (assoc request :formParams
                       (-> body
                           (codec/form-decode)
-                          (keywordize))))
+                          (walk/keywordize-keys))))
       (handler request))))
+
+
+(defn wrap-exception [handler]
+  (fn [request]
+    (try
+      (handler request)
+      (catch Throwable e
+        (util/logf "Unhandled exception: %s, %s, %s"
+                   (ex-message e)
+                   (ex-data e)
+                   e)
+        {:status 500
+         :headers {:content-type "text/plain"}
+         :body "Internal Server Error"}))))
 
 
 (defn in->request []
