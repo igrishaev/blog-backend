@@ -52,7 +52,7 @@
                        (ex-data e)
                        e)
             {:status 500
-             :headers {:content-type "text/plain"}
+             :headers {"content-type" "text/plain"}
              :body "Internal Server Error"}))))))
 
 

@@ -107,5 +107,5 @@
                                 "New comment")]
 
     {:status 200
-     :headers {:content-type "text/plain"}
+     :headers {"content-type" "text/plain"}
      :body "OK"}))

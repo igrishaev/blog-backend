@@ -4,7 +4,8 @@
    [ring.middleware.json :refer [wrap-json-body
                                  wrap-json-response]]
    [blog-backend.http :as http]
-   [blog-backend.comment :as comment]))
+   [blog-backend.comment :as comment]
+   [blog-backend.cors :as cors]))
 
 
 (defn router [{:as request
@@ -15,9 +16,12 @@
     [:post "/comment"]
     (comment/handle-new-comment request)
 
+    [:options "/comment"]
+    (cors/handle-cors request)
+
     ;; else
     {:status 404
-     :headers {:content-type "text/plain"}
+     :headers {"content-type" "text/plain"}
      :body "Not found"}))
 
 
