@@ -26,13 +26,17 @@
 
 
 (defn validate!
-  [{:keys [author comment path]}]
-  (when-not (ne-string? author)
-    (ex/ex-json! 400 {:message "Author is empty"}))
-  (when-not (ne-string? comment)
-    (ex/ex-json! 400 {:message "Comment is empty"}))
-  (when-not (ne-string? path)
-    (ex/ex-json! 400 {:message "Path is empty"})))
+  [jsonParams]
+  (when-not (map? jsonParams)
+    (ex/ex-json! 400 {:message "The JSON input is not an object"}))
+  (let [{:keys [author comment path]}
+        jsonParams]
+    (when-not (ne-string? author)
+      (ex/ex-json! 400 {:message "Author is empty"}))
+    (when-not (ne-string? comment)
+      (ex/ex-json! 400 {:message "Comment is empty"}))
+    (when-not (ne-string? path)
+      (ex/ex-json! 400 {:message "Path is empty"}))))
 
 
 (defn handle-new-comment

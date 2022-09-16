@@ -14,3 +14,11 @@
 
 (defn ex-http? [e]
   (some-> e ex-data meta :ex-http?))
+
+
+(defmacro pcall [& body]
+  `(try
+     (let [result# (do ~@body)]
+       [nil result#])
+     (catch Throwable e#
+       [e# nil])))

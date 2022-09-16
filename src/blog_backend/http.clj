@@ -17,21 +17,30 @@
 
 
 (defn wrap-base64 [handler]
-  (fn [{:as request :keys [isBase64Encoded]}]
+  (fn [{:as request :keys [body isBase64Encoded]}]
     (if isBase64Encoded
-      (handler (update request :body
-                       (fn [body]
-                         (-> body
-                             ^bytes (codec/base64-decode)
-                             (String. "UTF-8")))))
+      (let [[e body-decoded]
+            (ex/pcall (-> body
+                          ^bytes (codec/base64-decode)
+                          (String. "UTF-8")))]
+        (if e
+          {:status 400
+           :headers {:content-type "text/plain"}
+           :body "Malformed Base64 body"}
+          (handler (assoc request :body body-decoded))))
       (handler request))))
 
 
 (defn wrap-json-request [handler]
   (fn [{:as request :keys [body]}]
     (if (content-type-matches? request "application/json")
-      (handler (assoc request :jsonParams
-                      (json/parse-string body keyword)))
+      (let [[e json-params]
+            (ex/pcall (json/parse-string body keyword))]
+        (if e
+          {:status 400
+           :headers {:content-type "text/plain"}
+           :body "Malformed JSON body"}
+          (handler (assoc request :jsonParams json-params))))
       (handler request))))
 
 
