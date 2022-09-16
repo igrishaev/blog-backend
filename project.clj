@@ -21,7 +21,10 @@
   ^:skip-aot blog-backend.core
 
   :target-path
-  "target/%s"
+  "target/uberjar"
+
+  :uberjar-name
+  "blog-backend.jar"
 
   :profiles
   {:dev
