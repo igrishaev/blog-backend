@@ -33,3 +33,11 @@ graal-build: platform-local
 	native-image ${NI_ARGS}$(shell cat ${PLATFORM})
 
 build-binary-local: ${JAR} graal-build
+
+PACKAGE=package.zip
+
+uberjar:
+	lein uberjar
+
+bash-package: uberjar build-binary-docker
+	zip -j ${PACKAGE} conf/handler.sh builds/blog-backend-Linux-x86_64
