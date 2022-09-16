@@ -1,74 +1,38 @@
+;; https://github.com/ring-clojure/ring/blob/master/SPEC
+;; https://cloud.yandex.ru/docs/functions/concepts/function-invoke
+
 (ns blog-backend.http
   (:require
+   [blog-backend.codec :as codec]
    [blog-backend.ex :as ex]
    [blog-backend.log :as log]
-   [blog-backend.codec :as codec]
-   [clojure.walk :as walk]
-   [clojure.string :as str]
+   [cheshire.core :as json]
    [clojure.java.io :as io]
-   [cheshire.core :as json]))
+   [clojure.string :as str]))
 
 
-(defn content-type-matches? [request content-type]
-  (some-> request
-          :headers
-          :Content-Type
-          (str/includes? content-type)))
+(defn parse-request
+  [{:keys [requestContext
+           path
+           queryStringParameters
+           httpMethod
+           body
+           isBase64Encoded
+           headers]}]
+  {:remote-addr (-> requestContext :identity :sourceIp)
+   :uri (if (= path "") "/" path)
+   :query-string (update-keys queryStringParameters name)
+   :request-method (-> httpMethod name str/lower-case keyword)
+   :headers (update-keys headers #(-> % name str/lower-case))
+   :body (if isBase64Encoded
+           (-> body codec/base64-decode io/input-stream)
+           (-> body codec/str->bytes io/input-stream))})
 
 
-(defn wrap-base64 [handler]
-  (fn [{:as request :keys [body isBase64Encoded]}]
-    (if isBase64Encoded
-      (let [[e body-decoded]
-            (ex/pcall (-> body
-                          ^bytes (codec/base64-decode)
-                          (String. "UTF-8")))]
-        (if e
-          {:status 400
-           :headers {:content-type "text/plain"}
-           :body "Malformed Base64 body"}
-          (handler (assoc request :body body-decoded))))
-      (handler request))))
-
-
-(defn wrap-json-request [handler]
-  (fn [{:as request :keys [body]}]
-    (if (content-type-matches? request "application/json")
-      (let [[e json-params]
-            (ex/pcall (json/parse-string body keyword))]
-        (if e
-          {:status 400
-           :headers {:content-type "text/plain"}
-           :body "Malformed JSON body"}
-          (handler (assoc request :jsonParams json-params))))
-      (handler request))))
-
-
-(defn wrap-json-response [handler]
-  (fn [request]
-    (let [{:as response :keys [body]}
-          (handler request)]
-      (if (coll? body)
-        (-> response
-            (update :body json/generate-string)
-            (assoc-in [:headers :content-type] "application/json"))
-        response))))
-
-
-(defn wrap-json [handler]
-  (-> handler
-      wrap-json-request
-      wrap-json-response))
-
-
-(defn wrap-form-params [handler]
-  (fn [{:as request :keys [body]}]
-    (if (content-type-matches? request "x-www-form-urlencoded")
-      (handler (assoc request :formParams
-                      (-> body
-                          (codec/form-decode)
-                          (walk/keywordize-keys))))
-      (handler request))))
+(defn ->request []
+  (-> *in*
+      (json/parse-stream keyword)
+      (parse-request)))
 
 
 (defn wrap-exception [handler]
@@ -92,10 +56,6 @@
              :body "Internal Server Error"}))))))
 
 
-(defn in->request []
-  (json/parse-stream *in* keyword))
-
-
 (defn encode-body [body]
   (cond
 
@@ -115,7 +75,7 @@
     (throw (ex-info "Wrong body" {:body body}))))
 
 
-(defn response->out
+(defn response->
   [{:keys [status headers body]}]
   (json/with-writer [*out* nil]
     (json/write

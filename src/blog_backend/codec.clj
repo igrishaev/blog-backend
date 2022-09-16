@@ -11,14 +11,25 @@
 
 (def base64-decode codec/base64-decode)
 
-(def form-decode codec/form-decode)
-
 (defn file? [x]
   (instance? File x))
 
 (defn in-stream? [x]
   (instance? InputStream x))
 
-
 (defn base64-encode-stream [in]
   (new Base64InputStream in true 0 (byte-array 0)))
+
+
+(defn str->bytes
+  (^bytes [^String string]
+   (.getBytes string))
+  (^bytes [^String string ^String encoding]
+   (.getBytes string encoding)))
+
+
+(defn bytes->str
+  (^String [^bytes bytes]
+   (new String bytes))
+  (^String [^bytes bytes ^String encoding]
+   (new String bytes encoding)))

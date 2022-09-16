@@ -26,11 +26,11 @@
 
 
 (defn validate!
-  [jsonParams]
-  (when-not (map? jsonParams)
+  [body]
+  (when-not (map? body)
     (ex/ex-json! 400 {:message "The JSON input is not an object"}))
   (let [{:keys [author comment path]}
-        jsonParams]
+        body]
     (when-not (ne-string? author)
       (ex/ex-json! 400 {:message "Author is empty"}))
     (when-not (ne-string? comment)
@@ -40,14 +40,14 @@
 
 
 (defn handle-new-comment
-  [{:keys [jsonParams]}]
+  [{:keys [body]}]
 
-  (validate! jsonParams)
+  (validate! body)
 
   (let [{:keys [author
                 comment
                 path]}
-        jsonParams
+        body
 
         gh
         {:token (env/get! "GITHUB_TOKEN")}
@@ -59,7 +59,7 @@
         (-> resp-get-repo :data :repository :id)
 
         commit
-        (-> resp-get-repo :data :repository :ref :target)
+        (-> resp-get-repo :data :repository :ref :target :oid)
 
         ms
         (date/ms-now)
@@ -77,13 +77,13 @@
         (date/inst-now)
 
         comment-path
-        (format "_comments/%s.md" (date/inst->dash inst-now))
+        (format "_comments/%s.md" (date/inst-format inst-now "yyyy-MM-dd-HH-mm-ss"))
 
         comment-id
         ms
 
         date
-        (date/inst->iso inst-now)
+        (date/inst-format inst-now "yyyy-MM-dd HH:mm:ss Z")
 
         comment-content
         (render-comment comment-id path date author comment)

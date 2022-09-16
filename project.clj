@@ -12,13 +12,13 @@
 
   :dependencies
   [[org.clojure/clojure "1.11.1"]
-   [ring/ring-codec "1.2.0"]
-   [commons-codec/commons-codec "1.15"]
+   [ring/ring-core "1.9.6"]
+   [ring/ring-json "0.5.1"]
    [http-kit "2.6.0"]
    [cheshire "5.10.0"]]
 
-  :main blog-backend.core
-  ;; ^:skip-aot blog-backend.core
+  :main
+  ^:skip-aot blog-backend.core
 
   :target-path
   "target/%s"

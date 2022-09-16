@@ -5,30 +5,21 @@
    java.time.format.DateTimeFormatter))
 
 
-(def ^DateTimeFormatter
-  formatter-iso
-  (-> "yyyyMMdd'T'HHmmss'Z'"
+(defn make-formatter
+  ^DateTimeFormatter [^String pattern]
+  (-> pattern
       (DateTimeFormatter/ofPattern)
       (.withZone (ZoneId/of "UTC"))))
 
 
-(def ^DateTimeFormatter
-  formatter-dash
-  (-> "yyyy-MM-dd-HH-mm-ss"
-      (DateTimeFormatter/ofPattern)
-      (.withZone (ZoneId/of "UTC"))))
+(defn inst-format [^Instant inst pattern]
+  (-> pattern
+      ^DateTimeFormatter (make-formatter)
+      (.format inst)))
 
 
 (defn inst-now []
   (Instant/now))
-
-
-(defn inst->iso [^Instant inst]
-  (.format formatter-iso inst))
-
-
-(defn inst->dash [^Instant inst]
-  (.format formatter-dash inst))
 
 
 (defn ms-now []
