@@ -88,14 +88,14 @@
         [{:path comment-path
           :contents comment-content}]
 
-        resp-create-commit
+        _resp-create-commit
         (gh/create-commit gh
                           branch-id
                           "New comment"
                           commit
                           {:additions additions})
 
-        resp-create-pr
+        _resp-create-pr
         (gh/create-pull-request gh
                                 repo-id
                                 "master"

@@ -3,7 +3,6 @@
    [ring.util.codec :as codec])
   (:import
    java.io.File
-   java.util.Base64
    java.io.InputStream
    org.apache.commons.codec.binary.Base64InputStream))
 

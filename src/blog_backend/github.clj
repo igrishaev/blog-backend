@@ -175,7 +175,7 @@ mutation Mutation($input: CreateCommitOnBranchInput!) {
 
     :else
     (throw (ex-info "Wrong contents type"
-                    :addition addition ))))
+                    {:addition addition}))))
 
 
 (defn process-additions [additions]
