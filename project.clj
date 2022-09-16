@@ -25,8 +25,7 @@
 
   :profiles
   {:dev
-   {;; :aot [blog-backend.ex]
-    :global-vars
+   {:global-vars
     {*warn-on-reflection* true
      *assert* true}}
 

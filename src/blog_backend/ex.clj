@@ -1,15 +1,16 @@
 (ns blog-backend.ex)
 
 
-(gen-class
- :name "ex.BaseError"
- :extends "clojure.lang.ExceptionInfo")
+(defn errorf! [template & args]
+  (throw (new Exception ^String (apply format template args))))
 
 
-(gen-class
- :name "ex.ValidationError"
- :extends "ex.BaseError")
+(defn ex-json! [status body]
+  (throw (ex-info "JSON response exception"
+                  ^:ex-http?
+                  {:status status
+                   :body body})))
 
 
-#_
-(compile 'blog-backend.ex)
+(defn ex-http? [e]
+  (some-> e ex-data meta :ex-http?))

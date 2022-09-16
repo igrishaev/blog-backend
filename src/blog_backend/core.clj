@@ -1,11 +1,8 @@
 (ns blog-backend.core
   (:gen-class)
   (:require
-   [blog-backend.http :as http]))
-
-
-(defn handle-new-comment [request]
-  )
+   [blog-backend.http :as http]
+   [blog-backend.comment :as comment]))
 
 
 (defn router [{:as request
@@ -14,7 +11,7 @@
   (case [httpMethod path]
 
     ["POST" "/comment"]
-    (handle-new-comment request)
+    (comment/handle-new-comment request)
 
     ;; else
     {:status 404
@@ -24,8 +21,8 @@
 
 (def app
   (-> router
+      http/wrap-json
       http/wrap-base64
-      http/wrap-form-params
       http/wrap-exception))
 
 

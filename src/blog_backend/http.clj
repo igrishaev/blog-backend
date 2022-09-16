@@ -1,14 +1,12 @@
 (ns blog-backend.http
   (:require
-   blog-backend.ex
-   [blog-backend.util :as util]
-   [ring.util.codec :as codec]
+   [blog-backend.ex :as ex]
+   [blog-backend.log :as log]
+   [blog-backend.codec :as codec]
    [clojure.walk :as walk]
    [clojure.string :as str]
    [clojure.java.io :as io]
-   [cheshire.core :as json])
-  (:import
-   ex.ValidationError))
+   [cheshire.core :as json]))
 
 
 (defn content-type-matches? [request content-type]
@@ -29,6 +27,31 @@
       (handler request))))
 
 
+(defn wrap-json-request [handler]
+  (fn [{:as request :keys [body]}]
+    (if (content-type-matches? request "application/json")
+      (handler (assoc request :jsonParams
+                      (json/parse-string body keyword)))
+      (handler request))))
+
+
+(defn wrap-json-response [handler]
+  (fn [request]
+    (let [{:as response :keys [body]}
+          (handler request)]
+      (if (coll? body)
+        (-> response
+            (update :body json/generate-string)
+            (assoc-in [:headers :content-type] "application/json"))
+        response))))
+
+
+(defn wrap-json [handler]
+  (-> handler
+      wrap-json-request
+      wrap-json-response))
+
+
 (defn wrap-form-params [handler]
   (fn [{:as request :keys [body]}]
     (if (content-type-matches? request "x-www-form-urlencoded")
@@ -44,17 +67,20 @@
     (try
       (handler request)
       (catch Throwable e
-        (util/logf "Unhandled exception: %s, %s, %s"
-                   (ex-message e)
-                   (ex-data e)
-                   e)
-        {:status 500
-         :headers {:content-type "text/plain"}
-         :body "Internal Server Error"})
-      (catch ValidationError e
-        {:status 404
-         :headers {:content-type "text/plain"}
-         :body "Incorrect Input"}))))
+
+        (cond
+          (ex/ex-http? e)
+          (ex-data e)
+
+          :else
+          (do
+            (log/error "Unhandled exception: %s, %s, %s"
+                       (ex-message e)
+                       (ex-data e)
+                       e)
+            {:status 500
+             :headers {:content-type "text/plain"}
+             :body "Internal Server Error"}))))))
 
 
 (defn in->request []
@@ -68,12 +94,12 @@
     {:body body
      :isBase64Encoded false}
 
-    (util/file? body)
-    {:body (-> body io/input-stream util/base64-encode-stream slurp)
+    (codec/file? body)
+    {:body (-> body io/input-stream codec/base64-encode-stream slurp)
      :isBase64Encoded true}
 
-    (util/in-stream? body)
-    {:body (-> body util/base64-encode-stream slurp)
+    (codec/in-stream? body)
+    {:body (-> body codec/base64-encode-stream slurp)
      :isBase64Encoded true}
 
     :else

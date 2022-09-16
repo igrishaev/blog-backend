@@ -3,7 +3,7 @@
   Github Graphql API.
   "
   (:require
-   [blog-backend.util :as util]
+   [blog-backend.codec :as codec]
    [cheshire.core :as json]
    [clojure.java.io :as io]
    [clojure.string :as str]
@@ -155,22 +155,22 @@ mutation Mutation($input: CreateCommitOnBranchInput!) {
               (-> string
                   .getBytes
                   io/input-stream
-                  util/base64-encode-stream
+                  codec/base64-encode-stream
                   slurp)))
 
-    (util/in-stream? contents)
+    (codec/in-stream? contents)
     (update addition :contents
             (fn [in-stream]
               (-> in-stream
-                  util/base64-encode-stream
+                  codec/base64-encode-stream
                   slurp)))
 
-    (util/file? contents)
+    (codec/file? contents)
     (update addition :contents
             (fn [file]
               (-> file
                   io/input-stream
-                  util/base64-encode-stream
+                  codec/base64-encode-stream
                   slurp)))
 
     :else
@@ -218,17 +218,6 @@ mutation Mutation ($input: CreatePullRequestInput!) {
   }
 }
 ")
-
-
-;; (defn foo [a b & {:keys [c d e] :or {c false}}]
-;;   [a b c d e])
-;; (defn foo [a b (c false) (d nil) (e true)]
-;;   [a b c d e])
-;; (require '[clojure.spec.alpha :as s])
-;; (s/def ::args
-;;   (s/cat :req (s/* symbol?)
-;;          :opt (s/* (s/tuple symbol? any?))))
-;; (s/conform ::args '[a b c])
 
 
 (defn create-pull-request [config

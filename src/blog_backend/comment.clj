@@ -1,12 +1,10 @@
 (ns blog-backend.comment
   (:require
-   blog-backend.ex
+   [blog-backend.env :as env]
+   [blog-backend.ex :as ex]
    [blog-backend.github :as gh]
    [blog-backend.date :as date]
-   [blog-backend.util :as util]
-   [clojure.string :as str])
-  (:import
-   ex.ValidationError))
+   [clojure.string :as str]))
 
 
 (def ne-string?
@@ -30,23 +28,25 @@
 (defn validate!
   [{:keys [author comment path]}]
   (when-not (ne-string? author)
-    (throw (new ValidationError "Wrong author" {:author author}))))
+    (ex/ex-json! 400 {:message "Author is empty"}))
+  (when-not (ne-string? comment)
+    (ex/ex-json! 400 {:message "Comment is empty"}))
+  (when-not (ne-string? path)
+    (ex/ex-json! 400 {:message "Path is empty"})))
 
 
 (defn handle-new-comment
-  [{:keys [formParams]}]
+  [{:keys [jsonParams]}]
+
+  (validate! jsonParams)
 
   (let [{:keys [author
                 comment
                 path]}
-        formParams
-
-        ;; TODO
-        _
-        (validate! formParams)
+        jsonParams
 
         gh
-        {:token (util/get-env! "GITHUB_TOKEN")}
+        {:token (env/get! "GITHUB_TOKEN")}
 
         resp-get-repo
         (gh/get-repo gh "igrishaev" "blog" "master")
