@@ -8,5 +8,5 @@
    :headers
    {"Access-Control-Allow-Origin" ORIGIN
     "Access-Control-Allow-Methods" "POST"
-    "Access-Control-Allow-Headers": "Content-Type"
+    "Access-Control-Allow-Headers" "Content-Type"
     "Content-Type" "application/json; charset=utf-8"}})
