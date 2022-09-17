@@ -9,14 +9,14 @@
 
 
 (defn router [{:as request
-               :keys [request-method uri]}]
+               :keys [request-method]}]
 
-  (case [request-method uri]
+  (case request-method
 
-    [:post "/comment"]
+    :post
     (comment/handle-new-comment request)
 
-    [:options "/comment"]
+    :options
     (cors/handle-cors request)
 
     ;; else

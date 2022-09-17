@@ -34,7 +34,7 @@ graal-build: platform-local
 
 build-binary-local: ${JAR} graal-build
 
-PACKAGE=package.zip
+PACKAGE=blog-backend.zip
 
 uberjar:
 	lein uberjar
