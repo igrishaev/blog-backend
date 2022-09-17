@@ -7,6 +7,10 @@
    [clojure.string :as str]))
 
 
+(def MESSAGE_OK
+  "Your comment has been queued for review and will appear soon.")
+
+
 (def ne-string?
   (every-pred string? (complement str/blank?)))
 
@@ -25,7 +29,7 @@
     (println comment)))
 
 
-(defn validate!
+(defn validate-body!
   [body]
   (when-not (map? body)
     (ex/ex-json! 400 {:message "The JSON input is not an object"}))
@@ -42,7 +46,7 @@
 (defn handle-new-comment
   [{:keys [body]}]
 
-  (validate! body)
+  (validate-body! body)
 
   (let [{:keys [author
                 comment
@@ -107,5 +111,4 @@
                                 "New comment")]
 
     {:status 200
-     :headers {"content-type" "text/plain"}
-     :body "OK"}))
+     :body {:message MESSAGE_OK}}))
