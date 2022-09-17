@@ -4,12 +4,12 @@
 
 
 (defmacro log [level template & args]
-  `(let [out# ^PrintWriter *err*]
-     (.print out# ~level)
-     (.print out# " ")
-     (.print out# (ns-name *ns*))
-     (.print out# " ")
-     (.println out# (format ~template ~@args))))
+  `(do
+     (.print System/err ~level)
+     (.print System/err " ")
+     (.print System/err (ns-name *ns*))
+     (.print System/err " ")
+     (.println System/err (format ~template ~@args))))
 
 
 (defmacro debug [template & args]
