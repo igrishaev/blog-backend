@@ -1,21 +1,28 @@
 (ns blog-backend.codec
-  (:require
-   [ring.util.codec :as codec])
   (:import
    java.io.File
    java.io.InputStream
+   java.util.Base64
    org.apache.commons.codec.binary.Base64InputStream))
 
 
-(def base64-encode codec/base64-encode)
+(defn base64-encode
+  [^bytes unencoded]
+  (String. (.encode (Base64/getEncoder) unencoded)))
 
-(def base64-decode codec/base64-decode)
+
+(defn base64-decode
+  [^String encoded]
+  (.decode (Base64/getDecoder) encoded))
+
 
 (defn file? [x]
   (instance? File x))
 
+
 (defn in-stream? [x]
   (instance? InputStream x))
+
 
 (defn base64-encode-stream [in]
   (new Base64InputStream in true 0 (byte-array 0)))
