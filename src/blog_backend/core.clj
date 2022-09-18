@@ -11,10 +11,10 @@
 
   (case httpMethod
 
-    :post
+    "POST"
     (comment/handle-new-comment request)
 
-    :options
+    "OPTIONS"
     (cors/handle-cors request)
 
     ;; else
