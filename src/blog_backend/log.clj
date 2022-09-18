@@ -1,6 +1,4 @@
-(ns blog-backend.log
-  (:import
-   java.io.PrintWriter))
+(ns blog-backend.log)
 
 
 (defmacro log [level template & args]

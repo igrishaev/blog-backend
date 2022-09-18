@@ -44,14 +44,14 @@
 
 
 (defn handle-new-comment
-  [{:keys [body]}]
+  [{:keys [jsonParams]}]
 
-  (validate-body! body)
+  (validate-body! jsonParams)
 
   (let [{:keys [author
                 comment
                 path]}
-        body
+        jsonParams
 
         gh
         {:token (env/get! "GITHUB_TOKEN")}

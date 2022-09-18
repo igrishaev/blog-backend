@@ -1,17 +1,15 @@
 (ns blog-backend.core
   (:gen-class)
   (:require
-   [ring.middleware.json :refer [wrap-json-body
-                                 wrap-json-response]]
    [blog-backend.http :as http]
    [blog-backend.comment :as comment]
    [blog-backend.cors :as cors]))
 
 
 (defn router [{:as request
-               :keys [request-method]}]
+               :keys [httpMethod]}]
 
-  (case request-method
+  (case httpMethod
 
     :post
     (comment/handle-new-comment request)
@@ -26,10 +24,7 @@
 
 
 (def app
-  (-> router
-      (wrap-json-body {:keywords? true})
-      wrap-json-response
-      http/wrap-exception))
+  (http/wrap-default router))
 
 
 (defn -main
@@ -40,5 +35,7 @@
 
 
 #_
-(binding [*in* (-> "yc-request.json" clojure.java.io/resource clojure.java.io/reader)]
+(binding [*in* (-> "yc-request.json"
+                   clojure.java.io/resource
+                   clojure.java.io/reader)]
   (-main))

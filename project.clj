@@ -12,8 +12,6 @@
 
   :dependencies
   [[org.clojure/clojure "1.11.1"]
-   [ring/ring-json "0.5.1"]
-   [commons-codec/commons-codec "1.15"]
    [http-kit "2.6.0"]
    [cheshire "5.10.0"]]
 

@@ -10,6 +10,9 @@
    [org.httpkit.client :as http]))
 
 
+(def API_URL "https://api.github.com/graphql")
+
+
 (defn make-request [config operation query variables]
 
   (let [{:keys [token]}
@@ -28,11 +31,11 @@
           (assoc :variables variables))
 
         request-headers
-        {"content-type" "application/json"
+        {"content-type" "application/json; charset=utf-8"
          "authorization" (format "bearer %s" token)}
 
         request
-        {:url "https://api.github.com/graphql"
+        {:url API_URL
          :method :post
          :as :stream
          :headers request-headers
@@ -153,28 +156,12 @@ mutation Mutation($input: CreateCommitOnBranchInput!) {
     (update addition :contents
             (fn [^String string]
               (-> string
-                  .getBytes
-                  io/input-stream
-                  codec/base64-encode-stream
-                  slurp)))
-
-    (codec/in-stream? contents)
-    (update addition :contents
-            (fn [in-stream]
-              (-> in-stream
-                  codec/base64-encode-stream
-                  slurp)))
-
-    (codec/file? contents)
-    (update addition :contents
-            (fn [file]
-              (-> file
-                  io/input-stream
-                  codec/base64-encode-stream
-                  slurp)))
+                  (codec/str->bytes "UTF-8")
+                  (codec/b64-encode)
+                  (codec/bytes->str "UTF-8"))))
 
     :else
-    (throw (ex-info "Wrong contents type"
+    (throw (ex-info "Wrong addition type"
                     {:addition addition}))))
 
 

@@ -6,33 +6,46 @@
    [blog-backend.codec :as codec]
    [blog-backend.ex :as ex]
    [blog-backend.log :as log]
-   [cheshire.core :as json]
-   [clojure.java.io :as io]
-   [clojure.string :as str]))
+   [cheshire.core :as json]))
 
 
-(defn parse-request
-  [{:keys [requestContext
-           path
-           queryStringParameters
-           httpMethod
-           body
-           isBase64Encoded
-           headers]}]
-  {:remote-addr (-> requestContext :identity :sourceIp)
-   :uri (if (= path "") "/" path)
-   :query-string (update-keys queryStringParameters name)
-   :request-method (-> httpMethod name str/lower-case keyword)
-   :headers (update-keys headers #(-> % name str/lower-case))
-   :body (if isBase64Encoded
-           (-> body codec/base64-decode io/input-stream)
-           (-> body codec/str->bytes io/input-stream))})
+(defn content-type-matches?
+  [request re-content-type]
+  (some-> request
+          :headers
+          :Content-Type
+          (some->> (re-find re-content-type))))
 
 
-(defn ->request []
-  (-> *in*
-      (json/parse-stream keyword)
-      (parse-request)))
+(defn wrap-base64 [handler]
+  (fn [{:as request :keys [isBase64Encoded]}]
+    (if isBase64Encoded
+      (handler (update request :body
+                       (fn [body]
+                         (-> body
+                             (codec/str->bytes "UTF-8")
+                             (codec/b64-decode)
+                             (codec/bytes->str "UTF-8")))))
+      (handler request))))
+
+
+(defn wrap-json-request [handler]
+  (fn [{:as request :keys [body]}]
+    (if (content-type-matches? request #"(?i)application/json")
+      (handler (assoc request :jsonParams
+                      (json/parse-string body keyword)))
+      (handler request))))
+
+
+(defn wrap-json-response [handler]
+  (fn [request]
+    (let [{:as response :keys [body]}
+          (handler request)]
+      (if (coll? body)
+        (-> response
+            (update :body json/generate-string)
+            (assoc-in [:headers :Content-Type] "application/json; charset=utf-8"))
+        response))))
 
 
 (defn wrap-exception [handler]
@@ -56,6 +69,14 @@
              :body "Internal Server Error"}))))))
 
 
+(defn wrap-default [handler]
+  (-> handler
+      wrap-json-request
+      wrap-json-response
+      wrap-base64
+      wrap-exception))
+
+
 (defn encode-body [body]
   (cond
 
@@ -63,16 +84,13 @@
     {:body body
      :isBase64Encoded false}
 
-    (codec/file? body)
-    {:body (-> body io/input-stream codec/base64-encode-stream slurp)
-     :isBase64Encoded true}
-
-    (codec/in-stream? body)
-    {:body (-> body codec/base64-encode-stream slurp)
-     :isBase64Encoded true}
-
     :else
-    (throw (ex-info "Wrong body" {:body body}))))
+    (throw (ex-info "Wrong response body"
+                    {:body body}))))
+
+
+(defn ->request []
+  (json/parse-stream *in* keyword))
 
 
 (defn response->
