@@ -37,6 +37,6 @@
     "requestTime": "26/Dec/2019:14:22:07 +0000",
     "requestTimeEpoch": 1577370127
   },
-  "body": "{\"author\": \"test\", \"comment\": \"comm\", \"path\": \"foo/bar\"}",
-  "isBase64Encoded": false
+  "body": "ewogICJhdXRob3IiOiAi0JjQstCw0L0iLAogICJjb21tZW50IjogItCf0YDQuNCy0LXRgiEhISIsCiAgInBhdGgiOiAiL2RlLWpzLTIvIgp9Cg==",
+  "isBase64Encoded": true
 }
