@@ -7,12 +7,14 @@
 (defn html-page [message backpath]
   (hiccup/html
    [:html
-    [:body
-     [:h2
+    [:body {:style "padding-top:50px;"}
+     [:h2 {:style "font-size:7vw;"}
       [:center message]]
      [:form {:action (str const/BLOG_URL backpath)}
       [:center
-       [:button {:type "submit"} "Вернуться к обсуждению"]]]]]))
+       [:button {:type "submit"
+                 :style "font-size:7vw; cursor: pointer;"}
+        "Вернуться к обсуждению"]]]]]))
 
 
 (defn html-response [status message backpath]
