@@ -20,3 +20,6 @@
 
 (def BLOG_URL
   "https://grishaev.me")
+
+(def CORS_ORIGIN
+  "https://grishaev.me")
