@@ -12,6 +12,8 @@
 
   :dependencies
   [[org.clojure/clojure "1.11.1"]
+   [ring/ring-codec "1.2.0"]
+   [hiccup "1.0.5"]
    [http-kit "2.6.0"]
    [cheshire "5.10.0"]]
 

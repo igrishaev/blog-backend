@@ -6,7 +6,9 @@
    [blog-backend.codec :as codec]
    [blog-backend.ex :as ex]
    [blog-backend.log :as log]
-   [cheshire.core :as json]))
+   [ring.util.codec :as ring.codec]
+   [cheshire.core :as json]
+   [clojure.walk :as walk]))
 
 
 (defn content-type-matches?
@@ -48,6 +50,17 @@
         response))))
 
 
+(defn wrap-form-params [handler]
+  (fn [{:as request :keys [body]}]
+    (if (content-type-matches? request #"(?i)application/x-www-form-urlencoded")
+      (handler (assoc request
+                      :formParams
+                      (-> body
+                          (ring.codec/form-decode "UTF-8")
+                          (walk/keywordize-keys))))
+      (handler request))))
+
+
 (defn wrap-exception [handler]
   (fn [request]
     (try
@@ -71,6 +84,7 @@
 
 (defn wrap-default [handler]
   (-> handler
+      wrap-form-params
       wrap-json-request
       wrap-json-response
       wrap-base64

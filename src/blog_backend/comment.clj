@@ -1,5 +1,6 @@
 (ns blog-backend.comment
   (:require
+   [blog-backend.html :as html]
    [blog-backend.env :as env]
    [blog-backend.ex :as ex]
    [blog-backend.github :as gh]
@@ -32,28 +33,32 @@
 
 
 (defn validate-body!
-  [body]
-  (when-not (map? body)
-    (ex/ex-json! 400 {:message "The JSON input is not an object"}))
+  [payload]
+  (when-not (map? payload)
+    (ex/ex-response! (html/html-page "..." nil)))
+
   (let [{:keys [author comment path]}
-        body]
-    (when-not (ne-string? author)
-      (ex/ex-json! 400 {:message "Author is empty"}))
-    (when-not (ne-string? comment)
-      (ex/ex-json! 400 {:message "Comment is empty"}))
+        payload]
+
     (when-not (ne-string? path)
-      (ex/ex-json! 400 {:message "Path is empty"}))))
+      (ex/ex-response! (html/html-page "..." nil)))
+
+    (when-not (ne-string? author)
+      (ex/ex-response! (html/html-page "..." path)))
+
+    (when-not (ne-string? comment)
+      (ex/ex-response! (html/html-page "..." path)))))
 
 
 (defn handle-new-comment
-  [{:keys [jsonParams]}]
+  [{:keys [formParams]}]
 
-  (validate-body! jsonParams)
+  (validate-body! formParams)
 
   (let [{:keys [author
                 comment
                 path]}
-        jsonParams
+        formParams
 
         gh
         {:token (env/get! "GITHUB_TOKEN")}
@@ -112,5 +117,4 @@
                                 branch-name
                                 "New comment")]
 
-    {:status 200
-     :body {:message MESSAGE_OK}}))
+    (html/html-page MESSAGE_OK path)))

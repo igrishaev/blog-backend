@@ -5,11 +5,12 @@
   (throw (new Exception ^String (apply format template args))))
 
 
+(defn ex-response! [response]
+  (throw (ex-info "HTTP response" ^:ex-http? response)))
+
+
 (defn ex-json! [status body]
-  (throw (ex-info "JSON response exception"
-                  ^:ex-http?
-                  {:status status
-                   :body body})))
+  (ex-response! {:status status :body body}))
 
 
 (defn ex-http? [e]
