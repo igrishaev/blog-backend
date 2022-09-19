@@ -6,7 +6,8 @@
 
 
 (defn ex-response! [response]
-  (throw (ex-info "HTTP response" ^:ex-http? response)))
+  (throw (ex-info "HTTP response"
+                  (with-meta response {:ex/http? true}))))
 
 
 (defn ex-json! [status body]
@@ -14,7 +15,7 @@
 
 
 (defn ex-http? [e]
-  (some-> e ex-data meta :ex-http?))
+  (some-> e ex-data meta :ex/http?))
 
 
 (defmacro pcall [& body]
