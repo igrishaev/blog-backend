@@ -3,62 +3,47 @@
 
 (ns blog-backend.http
   (:require
+   [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+   [ring.middleware.params :refer [wrap-params]]
+   [ring.middleware.json :refer [wrap-json-params
+                                 wrap-json-response]]
+   [blog-backend.html :as html]
    [blog-backend.codec :as codec]
+   [blog-backend.const :as const]
    [blog-backend.ex :as ex]
    [blog-backend.log :as log]
-   [ring.util.codec :as ring.codec]
+   [clojure.java.io :as io]
    [cheshire.core :as json]
-   [clojure.walk :as walk]))
+   [clojure.string :as str]))
 
 
-(defn content-type-matches?
-  [request re-content-type]
-  (some-> request
-          :headers
-          :Content-Type
-          (some->> (re-find re-content-type))))
+(defn parse-request
+  [{:strs [requestContext
+           path
+           queryStringParameters
+           httpMethod
+           body
+           isBase64Encoded
+           headers]}]
+  {:remote-addr (get-in requestContext ["identity" "sourceIp"])
+   :uri (if (= path "") "/" path)
+   :query-params queryStringParameters
+   :request-method (-> httpMethod name str/lower-case keyword)
+   :headers (update-keys headers str/lower-case)
+   :body (if isBase64Encoded
+           (-> body
+               (codec/str->bytes "UTF-8")
+               (codec/b64-decode)
+               (io/input-stream))
+           (-> body
+               (codec/str->bytes "UTF-8")
+               (io/input-stream)))})
 
 
-(defn wrap-base64 [handler]
-  (fn [{:as request :keys [isBase64Encoded]}]
-    (if isBase64Encoded
-      (handler (update request :body
-                       (fn [body]
-                         (-> body
-                             (codec/str->bytes "UTF-8")
-                             (codec/b64-decode)
-                             (codec/bytes->str "UTF-8")))))
-      (handler request))))
-
-
-(defn wrap-json-request [handler]
-  (fn [{:as request :keys [body]}]
-    (if (content-type-matches? request #"(?i)application/json")
-      (handler (assoc request :jsonParams
-                      (json/parse-string body keyword)))
-      (handler request))))
-
-
-(defn wrap-json-response [handler]
-  (fn [request]
-    (let [{:as response :keys [body]}
-          (handler request)]
-      (if (coll? body)
-        (-> response
-            (update :body json/generate-string)
-            (assoc-in [:headers :Content-Type] "application/json; charset=utf-8"))
-        response))))
-
-
-(defn wrap-form-params [handler]
-  (fn [{:as request :keys [body]}]
-    (if (content-type-matches? request #"(?i)application/x-www-form-urlencoded")
-      (handler (assoc request
-                      :formParams
-                      (-> body
-                          (ring.codec/form-decode "UTF-8")
-                          (walk/keywordize-keys))))
-      (handler request))))
+(defn ->request []
+  (-> *in*
+      (json/parse-stream)
+      (parse-request)))
 
 
 (defn wrap-exception [handler]
@@ -77,17 +62,15 @@
                        (ex-message e)
                        (ex-data e)
                        e)
-            {:status 500
-             :headers {"content-type" "text/plain"}
-             :body "Internal Server Error"}))))))
+            (html/html-page const/MSG_FAILED "/")))))))
 
 
 (defn wrap-default [handler]
   (-> handler
-      wrap-form-params
-      wrap-json-request
+      wrap-keyword-params
+      wrap-params
+      wrap-json-params
       wrap-json-response
-      wrap-base64
       wrap-exception))
 
 
@@ -103,15 +86,13 @@
                     {:body body}))))
 
 
-(defn ->request []
-  (json/parse-stream *in* keyword))
-
-
 (defn response->
   [{:keys [status headers body]}]
   (json/with-writer [*out* nil]
     (json/write
-     (cond-> {:statusCode status}
+     (cond-> nil
+       status
+       (assoc :statusCode status)
        headers
        (assoc :headers headers)
        body

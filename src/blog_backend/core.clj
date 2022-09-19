@@ -7,14 +7,14 @@
 
 
 (defn router [{:as request
-               :keys [httpMethod]}]
+               :keys [request-method]}]
 
-  (case httpMethod
+  (case request-method
 
-    "POST"
+    :post
     (comment/handle-new-comment request)
 
-    "OPTIONS"
+    :options
     (cors/handle-cors request)
 
     ;; else

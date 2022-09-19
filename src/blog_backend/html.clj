@@ -1,10 +1,7 @@
 (ns blog-backend.html
   (:require
+   [blog-backend.const :as const]
    [hiccup.core :as hiccup]))
-
-
-(def BASE_URL
-  "https://grishaev.me")
 
 
 (defn html-page [message backpath]
@@ -13,7 +10,7 @@
     [:body
      [:h2
       [:center message]]
-     [:form {:action (str BASE_URL backpath)}
+     [:form {:action (str const/BLOG_URL backpath)}
       [:center
        [:button {:type "submit"} "Вернуться к обсуждению"]]]]]))
 

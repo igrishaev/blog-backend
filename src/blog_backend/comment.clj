@@ -1,17 +1,12 @@
 (ns blog-backend.comment
   (:require
+   [blog-backend.const :as const]
    [blog-backend.html :as html]
    [blog-backend.env :as env]
    [blog-backend.ex :as ex]
    [blog-backend.github :as gh]
    [blog-backend.date :as date]
    [clojure.string :as str]))
-
-
-(def MESSAGE_OK
-  #_
-  "Your comment has been queued for review and will appear soon."
-  "Ваш комментарий добавлен в очередь и скоро появится на сайте.")
 
 
 (def ne-string?
@@ -33,32 +28,36 @@
 
 
 (defn validate-body!
-  [payload]
-  (when-not (map? payload)
-    (ex/ex-response! (html/html-page "..." nil)))
+  [params]
+  (when-not (map? params)
+    (ex/ex-response!
+     (html/html-response 400 const/MSG_NOT_MAP "/")))
 
   (let [{:keys [author comment path]}
-        payload]
+        params]
 
     (when-not (ne-string? path)
-      (ex/ex-response! (html/html-page "..." nil)))
+      (ex/ex-response!
+       (html/html-response 400 const/MSG_PATH_NOT_SET "/")))
 
     (when-not (ne-string? author)
-      (ex/ex-response! (html/html-page "..." path)))
+      (ex/ex-response!
+       (html/html-response 400 const/MSG_AUTHOR_NOT_SET path)))
 
     (when-not (ne-string? comment)
-      (ex/ex-response! (html/html-page "..." path)))))
+      (ex/ex-response!
+       (html/html-response 400 const/MSG_COMMENT_NOT_SET path)))))
 
 
 (defn handle-new-comment
-  [{:keys [formParams]}]
+  [{:keys [params]}]
 
-  (validate-body! formParams)
+  (validate-body! params)
 
   (let [{:keys [author
                 comment
                 path]}
-        formParams
+        params
 
         gh
         {:token (env/get! "GITHUB_TOKEN")}
@@ -117,4 +116,4 @@
                                 branch-name
                                 "New comment")]
 
-    (html/html-page MESSAGE_OK path)))
+    (html/html-response 200 const/MSG_OK path)))
