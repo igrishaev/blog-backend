@@ -18,6 +18,8 @@
   :main
   ^:skip-aot blog-backend.core
 
+  :jvm-opts ["-Dfile.encoding=UTF-8"]
+
   :target-path
   "target/uberjar"
 

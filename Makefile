@@ -8,6 +8,7 @@ NI_ARGS = \
 	--report-unsupported-elements-at-runtime \
 	--no-fallback \
 	-jar ${JAR} \
+	-J-Dfile.encoding=UTF-8 \
 	--enable-http \
 	--enable-https \
 	-H:+PrintClassInitialization \

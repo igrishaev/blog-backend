@@ -8,7 +8,9 @@
 
 
 (def MESSAGE_OK
-  "Your comment has been queued for review and will appear soon.")
+  #_
+  "Your comment has been queued for review and will appear soon."
+  "Ваш комментарий добавлен в очередь и скоро появится на сайте.")
 
 
 (def ne-string?
