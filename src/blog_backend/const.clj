@@ -18,6 +18,15 @@
 (def MSG_COMMENT_NOT_SET
   "Не указан комментарий.")
 
+(def MSG_CAPTCHA_NOT_SET
+  "Не указана капча.")
+
+(def MSG_SOLUTION_NOT_SET
+  "Не указано решение капчи.")
+
+(def MSG_SOLUTION_IS_INCORRECT
+  "Неверное решение капчи.")
+
 (def BLOG_URL
   "https://grishaev.me")
 

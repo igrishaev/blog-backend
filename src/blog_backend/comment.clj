@@ -27,13 +27,35 @@
     (println comment)))
 
 
+(defn validate-captcha [captcha solution]
+  (when-let [[_ val1-raw op-raw val2-raw]
+             (re-find #"^(-?\d+) (.+?) (-?\d+)$" captcha)]
+
+    (let [val1
+          (Integer/parseInt val1-raw)
+
+          val2
+          (Integer/parseInt val2-raw)
+
+          op
+          (case op-raw
+            ("+" "&#43;") +
+            ("*" "&#215;") *
+            nil)]
+
+      (when (and val1 val2 op)
+        (= (str (op val1 val2))
+           (str/trim solution))))))
+
+
 (defn validate-body!
   [params]
+
   (when-not (map? params)
     (ex/ex-response!
      (html/html-response 400 const/MSG_NOT_MAP "/")))
 
-  (let [{:keys [author comment path]}
+  (let [{:keys [author comment path captcha solution]}
         params]
 
     (when-not (ne-string? path)
@@ -46,7 +68,19 @@
 
     (when-not (ne-string? comment)
       (ex/ex-response!
-       (html/html-response 400 const/MSG_COMMENT_NOT_SET path)))))
+       (html/html-response 400 const/MSG_COMMENT_NOT_SET path)))
+
+    (when-not (ne-string? captcha)
+      (ex/ex-response!
+       (html/html-response 200 const/MSG_CAPTCHA_NOT_SET path)))
+
+    (when-not (ne-string? solution)
+      (ex/ex-response!
+       (html/html-response 200 const/MSG_SOLUTION_NOT_SET path)))
+
+    (when-not (validate-captcha captcha solution)
+      (ex/ex-response!
+       (html/html-response 200 const/MSG_SOLUTION_IS_INCORRECT path)))))
 
 
 (defn handle-new-comment
