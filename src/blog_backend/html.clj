@@ -10,7 +10,7 @@
     [:body {:style "padding-top:50px;"}
      [:h2 {:style "font-size:7vw;"}
       [:center message]]
-     [:form {:action (str const/BLOG_URL backpath)}
+     [:form {:action (str const/BLOG_URL backpath "#comment-form")}
       [:center
        [:button {:type "submit"
                  :style "font-size:7vw; cursor: pointer;"}
