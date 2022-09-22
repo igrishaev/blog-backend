@@ -16,12 +16,15 @@
 (defn render-comment [id path date author comment]
   (with-out-str
     (println "---")
-    (println "id:" id)
+    (println "comment_id:" id)
     (println "is_spam:" false)
     (println "is_deleted:" false)
     (println "post:" path)
     (println "date:" date)
     (println "author_fullname:" (format "'%s'" author))
+    #_
+    (when parent-id
+      (println "parent_id:" parent-id))
     (println "---")
     (println)
     (println comment)))
